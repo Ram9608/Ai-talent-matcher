@@ -18,11 +18,11 @@ def extract_text_from_pdf(file_file):
 
 def get_gemini_response(resume_text, jd):
     try:
-        # Sabse basic aur stable model
+        # 'gemini-1.5-flash' sabse fast aur stable hai
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {str(e)}. Please check if your API Key is active in Google AI Studio."
+        return f"AI Error: {str(e)}. Please check your API key in Google AI Studio."u
