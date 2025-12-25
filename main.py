@@ -6,7 +6,7 @@ import shutil
 import os
 
 # Apni files ko import karna
-from  import models, database, utils
+import models, database, utils
 
 # Database tables ko initial start par hi banana
 models.Base.metadata.create_all(bind=database.engine)
@@ -77,3 +77,4 @@ def get_rankings(db: Session = Depends(get_db)):
     candidates = db.query(models.Candidate).order_by(models.Candidate.match_score.desc()).all()
 
     return {"rankings": candidates}
+
