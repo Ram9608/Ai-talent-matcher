@@ -18,17 +18,11 @@ def extract_text_from_pdf(file_file):
 
 def get_gemini_response(resume_text, jd):
     try:
-        # Sabse latest stable model use karein
-        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+        # Sabse basic aur stable model
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        # Agar naya model bhi fail ho toh default 'gemini-pro' try karein
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception:
-            return "AI Error: Model limit reached or temporary down. Please try again after 1 minute."
+        return f"AI Error: {str(e)}. Please check if your API Key is active in Google AI Studio."
