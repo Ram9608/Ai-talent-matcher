@@ -2,7 +2,7 @@ import PyPDF2
 import google.generativeai as genai
 import os
 
-# Gemini Config
+# Gemini Config: Render environment se key uthayega
 api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
@@ -17,20 +17,16 @@ def extract_text_from_pdf(file_file):
         return f"Error extracting text: {str(e)}"
 
 def get_gemini_response(resume_text, jd):
-    try:
-        # Sabse stable model name bina kisi prefix ke
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
-        
-        # Latest method for generation
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        # Agar ye bhi fail ho toh hum 'gemini-pro' try karenge
+    # In teenon mein se jo bhi available hoga, wo chal jayega
+    models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-flash-latest']
+    
+    for model_name in models_to_try:
         try:
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel(model_name)
+            prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
             response = model.generate_content(prompt)
             return response.text
-        except Exception as e2:
-            return f"AI Error: Model not responding. Detail: {str(e2)}"
+        except Exception:
+            continue 
+            
+    return "AI Error: Gemini models are currently busy. Please try again in 1 minute."
