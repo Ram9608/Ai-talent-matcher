@@ -18,11 +18,19 @@ def extract_text_from_pdf(file_file):
 
 def get_gemini_response(resume_text, jd):
     try:
-        # Model ka naam bina 'models/' ke likhein, ye version sabse stable hai
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
+        # Sabse stable model name bina kisi prefix ke
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
+        
+        # Latest method for generation
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {str(e)}"
+        # Agar ye bhi fail ho toh hum 'gemini-pro' try karenge
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e2:
+            return f"AI Error: Model not responding. Detail: {str(e2)}"
