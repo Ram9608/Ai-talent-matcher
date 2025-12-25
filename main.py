@@ -1,80 +1,37 @@
-from fastapi import FastAPI, UploadFile, File, Form, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
-import shutil
-import os
-
-# Apni files ko import karna
 import models, database, utils
+from database import engine
+from fastapi.responses import HTMLResponse
 
-# Database tables ko initial start par hi banana
-models.Base.metadata.create_all(bind=database.engine)
+app = FastAPI()
 
-app = FastAPI(title="AI Talent Matcher Pro with Gemini")
+# Database setup
+models.Base.metadata.create_all(bind=engine)
 
-# Templates folder ka setup
+# Sahi templates folder link kiya gaya hai
 templates = Jinja2Templates(directory="templates")
 
-# Data folder check karna
-if not os.path.exists("data"):
-    os.makedirs("data")
-
-# Database session dependency
-def get_db():
-    db = database.SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# --- 1. DASHBOARD (Frontend) ---
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "result": None})
 
-# --- 2. UPLOAD & GEMINI ANALYSIS ---
-@app.post("/upload/")
-async def upload_resume(
-    job_description: str = Form(...), 
-    file: UploadFile = File(...), 
-    db: Session = Depends(get_db)
-):
-    # 1. File ko save karna
-    file_path = f"data/{file.filename}"
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # 2. PDF se text nikalna aur Match Score (TF-IDF) nikalna
-    resume_text = utils.extract_text_from_pdf(file_path)
-    score = utils.calculate_match_score(resume_text, job_description)
-    
-    # 3. Gemini AI Feedback (Naya AI Logic)
-    # Hum 'await' use kar rahe hain kyunki AI response mein thoda time lagta hai
-    feedback = await utils.generate_llm_feedback(resume_text, job_description)
-    
-    # 4. Data ko SQL Database mein save karna
-    new_candidate = models.Candidate(
-        filename=file.filename,
-        job_description=job_description,
-        match_score=score,
-        feedback=feedback
-    )
-    db.add(new_candidate)
-    db.commit()
-    db.refresh(new_candidate)
-    
-    return {
-        "status": "Success", 
-        "score": score, 
-        "ai_feedback": feedback
-    }
-
-# --- 3. RANKINGS (DSA Sorting) ---
-@app.get("/rankings/")
-def get_rankings(db: Session = Depends(get_db)):
-    # Database se high score wale candidates pehle dikhana
-    candidates = db.query(models.Candidate).order_by(models.Candidate.match_score.desc()).all()
-
-    return {"rankings": candidates}
-
+@app.post("/match", response_class=HTMLResponse)
+async def match_resume(request: Request, jd: str = Form(...), file: UploadFile = File(...)):
+    try:
+        # Resume se text nikalna
+        resume_text = utils.extract_text_from_pdf(file.file)
+        # Gemini AI se response lena
+        result = utils.get_gemini_response(resume_text, jd)
+        
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "result": result,
+            "jd": jd
+        })
+    except Exception as e:
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "result": f"Error: {str(e)}",
+            "jd": jd
+        })
