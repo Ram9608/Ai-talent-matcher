@@ -17,16 +17,18 @@ def extract_text_from_pdf(file_file):
         return f"Error extracting text: {str(e)}"
 
 def get_gemini_response(resume_text, jd):
-    # Multiple models try karega taaki 404 error na aaye
-    models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-flash-latest']
-    
-    for model_name in models_to_try:
+    try:
+        # Sabse latest stable model use karein
+        model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+        
+        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        # Agar naya model bhi fail ho toh default 'gemini-pro' try karein
         try:
-            model = genai.GenerativeModel(model_name)
-            prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
+            model = genai.GenerativeModel('gemini-pro')
             response = model.generate_content(prompt)
             return response.text
         except Exception:
-            continue 
-            
-    return "AI Error: Gemini models are currently busy. Please try again in 1 minute."
+            return "AI Error: Model limit reached or temporary down. Please try again after 1 minute."
