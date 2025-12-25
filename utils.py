@@ -2,7 +2,7 @@ import PyPDF2
 import google.generativeai as genai
 import os
 
-# Gemini Config: Render environment se key uthayega
+# Gemini Config
 api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
@@ -17,7 +17,7 @@ def extract_text_from_pdf(file_file):
         return f"Error extracting text: {str(e)}"
 
 def get_gemini_response(resume_text, jd):
-    # In teenon mein se jo bhi available hoga, wo chal jayega
+    # Multiple models try karega taaki 404 error na aaye
     models_to_try = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-flash-latest']
     
     for model_name in models_to_try:
