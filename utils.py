@@ -17,11 +17,17 @@ def extract_text_from_pdf(file_file):
         return f"Error: {str(e)}"
 
 def get_gemini_response(resume_text, jd):
+    # Hum 'gemini-1.5-flash' ki jagah seedha 'gemini-pro' try karenge jo zyada stable hai
     try:
-        # Latest stable model
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Provide match % and feedback."
+        model = genai.GenerativeModel('gemini-pro')
+        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {str(e)}"
+        # Agar wo bhi fail ho toh ye aakhri koshish karega
+        try:
+            model = genai.GenerativeModel('models/gemini-pro')
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e2:
+            return f"AI Error: {str(e2)}"
