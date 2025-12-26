@@ -18,7 +18,7 @@ def extract_text_from_pdf(file_file):
 
 def get_gemini_response(resume_text, jd):
     try:
-        # Latest stable model for free tier
+        # Latest stable model
         model = genai.GenerativeModel('gemini-1.5-flash')
         prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Provide match % and feedback."
         response = model.generate_content(prompt)
