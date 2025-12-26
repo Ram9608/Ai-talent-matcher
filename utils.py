@@ -14,15 +14,14 @@ def extract_text_from_pdf(file_file):
             text += page.extract_text()
         return text
     except Exception as e:
-        return f"Error extracting text: {str(e)}"
+        return f"Error: {str(e)}"
 
 def get_gemini_response(resume_text, jd):
     try:
-        # 'gemini-1.5-flash' sabse fast aur stable hai
+        # Latest stable model for free tier
         model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Give match % and feedback."
+        prompt = f"Analyze this resume: {resume_text} against this JD: {jd}. Provide match % and feedback."
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"AI Error: {str(e)}. Please check your API key in Google AI Studio."u
+        return f"AI Error: {str(e)}"
